@@ -11,26 +11,26 @@ boolean knownComand = false;
 decode_results results;
 // Infrared Remote END
 
-
 // Motor
 // Traction Motor Speed 
 int motorSpeedIndex = 0;
-const int maxMotorIndex = 4; // it's an array index dim-1
+const int maxMotorIndex = 5; // it's an array index dim-1
 const int minMotorIndex = 0;
-int motorSpeed[5] = {
+int motorSpeed[6] = {
   0, 
-  50, 
-  100,
-  150,
-  255
+  150, 
+  175,
+  200,
+  225,
+  250
 };
 /*
 * DC Motor Control with L293D
 */
 
 const int MOTOR_ENABLED_PIN = 11;
-const int FORWARD_PIN = 10; //forward in1Pin
-const int BACKWARD_PIN = 9; //backward in2Pin
+const int FORWARD_PIN = 9; //forward in1Pin
+const int BACKWARD_PIN = 10; //backward in2Pin
 
 const int DIRECTION_ENABLED_PIN = 2;
 const int LEFT_PIN = 3; //left in3Pin
@@ -43,6 +43,7 @@ boolean backward = false;
 
 void setup()
 {
+  
   irrecv.enableIRIn(); // Start the receiver
   
   pinMode(IR_CODE_OK_PIN, OUTPUT);      // sets the digital pin as output
@@ -62,22 +63,19 @@ void loop() {
   knownComand = true;
   if (irrecv.decode(&results)) {
     long int decCode = results.value;
-        Serial.println(decCode);
+    Serial.println(decCode);
     switch (decCode) {
       case 16716015:
-      //case -1943902853 :
         Serial.println("left"); // remote button 4
         left = !left;
         right = false;
         break;
       case 16734885:
-      //case 71952287:
         Serial.println("Right"); // remote button 6
         left = false;
         right = !right;
         break;
       case 16726215:
-      //case 1217346747:
         Serial.println("Stop"); // remote button 5
         motorSpeedIndex = 0;
         left = false;
@@ -86,24 +84,20 @@ void loop() {
         backward = false;
         break;
       case 16718055:
-      //case 1033561079:
         Serial.println("Forward"); // remote button 2
         forward = !forward;
         backward = false;
         break;  
       case 16730805:
-      //case 465573243:
-        Serial.println("Backword"); // remote button 8
+        Serial.println("Backward"); // remote button 8
         forward = false;
         backward = !backward;
         break;
       case 16748655:
-      //case -439370369:
         Serial.println("Traction Motor +"); // remote button +
         if(motorSpeedIndex < maxMotorIndex) motorSpeedIndex++;
         break;  
       case 16754775:
-      //case -1547112997:
         Serial.println("Traction Motor -"); // remote button -
         if(motorSpeedIndex > minMotorIndex) motorSpeedIndex--;
         break;  
@@ -112,26 +106,56 @@ void loop() {
         Serial.println("Waiting ...");
         break;
     }
+
+/* Debugging
     Serial.println(knownComand);
+    String output = "Motor Speed :";
+    output += motorSpeed[motorSpeedIndex];
+    Serial.println(output);
+*/
     setIRComandLed(knownComand);
-    Serial.println(motorSpeedIndex);
     setDirection(left, right);
-    setMotor( forward, backward, 255);
+    setMotor( forward, backward, motorSpeed[motorSpeedIndex]);
+    
     irrecv.resume(); // Receive the next value
   }
 }
 
 void setMotor(boolean forward, boolean backward, int motorSpeed)
 {
-  analogWrite(MOTOR_ENABLED_PIN, motorSpeed);
-  digitalWrite(FORWARD_PIN, forward);
-  digitalWrite(BACKWARD_PIN, backward);
+ digitalWrite(MOTOR_ENABLED_PIN, HIGH);
+ if(forward){
+  analogWrite(FORWARD_PIN, motorSpeed);
+  analogWrite(BACKWARD_PIN, LOW);
+ }
+ if(backward){
+  analogWrite(FORWARD_PIN, LOW);
+  analogWrite(BACKWARD_PIN, motorSpeed);
+ }
+  if(!backward && !forward){
+  analogWrite(FORWARD_PIN, LOW);
+  analogWrite(BACKWARD_PIN, LOW);
+  digitalWrite(MOTOR_ENABLED_PIN, LOW);
+  motorSpeedIndex = 0;
+ }
 }
 
 void setDirection(boolean left, boolean right){
-  analogWrite(DIRECTION_ENABLED_PIN, 255);
-  digitalWrite(LEFT_PIN, left);
-  digitalWrite(RIGHT_PIN, right);
+  
+  digitalWrite(DIRECTION_ENABLED_PIN, HIGH);  
+  if(left){
+    analogWrite(LEFT_PIN, 255);
+    analogWrite(RIGHT_PIN, 0);
+  }
+  if(right){
+     analogWrite(LEFT_PIN, 0);
+    analogWrite(RIGHT_PIN, 255);
+  }
+  if(!left && !right){
+    analogWrite(LEFT_PIN, 0);
+    analogWrite(RIGHT_PIN, 0);
+    digitalWrite(DIRECTION_ENABLED_PIN, LOW);
+  }
 }
 
 void setIRComandLed(boolean known){

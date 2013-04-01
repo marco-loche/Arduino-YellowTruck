@@ -42,6 +42,11 @@ boolean right = false;
 boolean forward = false;
 boolean backward = false;
 
+const int NIGHT_LIGHT_PIN = 3;
+boolean night_on = false;
+const int EMERGENCY_LIGHT_PIN = 4;
+boolean emergency_on = false;
+
 void setup()
 {
   
@@ -56,6 +61,9 @@ void setup()
   pinMode(RIGHT_PIN, OUTPUT);
   pinMode(MOTOR_ENABLED_PIN, OUTPUT);
   pinMode(DIRECTION_ENABLED_PIN, OUTPUT);
+  
+  pinMode(NIGHT_LIGHT_PIN, OUTPUT);
+  pinMode(EMERGENCY_LIGHT_PIN, OUTPUT);
  
   Serial.begin(9600); 
 }
@@ -101,7 +109,15 @@ void loop() {
       case 16754775:
         Serial.println("Traction Motor -"); // remote button -
         if(motorSpeedIndex > minMotorIndex) motorSpeedIndex--;
-        break;  
+        break; 
+      case 16756815:
+        Serial.println("Night light"); 
+        night_on = !night_on;
+        break; 
+      case 16750695:
+        Serial.println("Emergency light"); 
+        emergency_on = !emergency_on;
+        break; 
       default: 
         knownComand = false;
         Serial.println("Waiting ...");
@@ -117,8 +133,9 @@ void loop() {
     setIRComandLed(knownComand);
     setDirection(left, right);
     setMotor( forward, backward, motorSpeed[motorSpeedIndex]);
-    
+    setLight(night_on, emergency_on);
     irrecv.resume(); // Receive the next value
+    
   }
 }
 
@@ -139,6 +156,23 @@ void setMotor(boolean forward, boolean backward, int motorSpeed)
   digitalWrite(MOTOR_ENABLED_PIN, LOW);
   motorSpeedIndex = 0;
  }
+}
+
+void setLight(boolean night_on, boolean emergency_on){
+if(night_on){
+   Serial.println("Night light on"); // remote button -
+ digitalWrite(NIGHT_LIGHT_PIN, HIGH);
+}else{
+   Serial.println("Night light off"); // remote button -
+ digitalWrite(NIGHT_LIGHT_PIN, LOW);
+}
+if(emergency_on){
+   Serial.println("Emergency light on"); // remote button -
+ digitalWrite(EMERGENCY_LIGHT_PIN, HIGH);
+}else{
+   Serial.println("Emergency light off"); // remote button -
+ digitalWrite(EMERGENCY_LIGHT_PIN, LOW);
+}
 }
 
 void setDirection(boolean left, boolean right){

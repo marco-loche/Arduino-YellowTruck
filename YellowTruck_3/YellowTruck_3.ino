@@ -2,10 +2,10 @@
 
 // Infrared Remote
 // PIN constants
-const int IR_RECIEVER_PIN = 5; // input
-IRrecv irrecv(IR_RECIEVER_PIN);
 const int IR_CODE_OK_PIN  = 6; // output
 const int IR_CODE_KO_PIN  = 7; // output
+const int IR_RECIEVER_PIN = 8; // input
+IRrecv irrecv(IR_RECIEVER_PIN);
 // variable
 boolean knownComand = false;
 decode_results results;
